@@ -54,6 +54,24 @@ function initializeServiceWorker() {
   // B5. TODO - In the event that the service worker registration fails, console
   //            log that it has failed.
   // STEPS B6 ONWARDS WILL BE IN /sw.js
+  if ("serviceWorker" in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
+        if (registration.installing) {
+          console.log("Service worker installing");
+        } else if (registration.waiting) {
+          console.log("Service worker installed");
+        } else if (registration.active) {
+          console.log("Service worker active");
+        }
+      } catch (error) {
+        console.error(`Registration failed with ${error}`);
+      }
+    });
+  }
 }
 
 /**
@@ -69,9 +87,16 @@ async function getRecipes() {
   // A1. TODO - Check local storage to see if there are any recipes.
   //            If there are recipes, return them.
   /**************************/
+  const localRecipes = localStorage.getItem('recipes');
+  if (localRecipes) {
+    return JSON.parse(localRecipes);
+  }
+
   // The rest of this method will be concerned with requesting the recipes
   // from the network
   // A2. TODO - Create an empty array to hold the recipes that you will fetch
+  let recipes = [];
+
   // A3. TODO - Return a new Promise. If you are unfamiliar with promises, MDN
   //            has a great article on them. A promise takes one parameter - A
   //            function (we call these callback functions). That function will
@@ -100,7 +125,22 @@ async function getRecipes() {
   //            resolve() method.
   // A10. TODO - Log any errors from catch using console.error
   // A11. TODO - Pass any errors to the Promise's reject() function
-}
+    return new Promise(async (resolve, reject) => {
+      for (let url of RECIPE_URLS) {
+        try {
+          const response = await fetch(url);
+          const recipe = await response.json();
+          recipes.push(recipe);
+        } catch (error) {
+          console.error('Failed to fetch recipe:', error);
+          reject(error);
+          return;
+        }
+      }
+      saveRecipesToStorage(recipes);
+      resolve(recipes);
+    });
+  }
 
 /**
  * Takes in an array of recipes, converts it to a string, and then
