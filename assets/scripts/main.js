@@ -57,7 +57,7 @@ function initializeServiceWorker() {
   if ("serviceWorker" in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register("/sp24-cse110-lab8/sw.js")
+        const registration = await navigator.serviceWorker.register("./sw.js")
         if (registration.installing) {
           console.log("Service worker installing");
         } else if (registration.waiting) {
